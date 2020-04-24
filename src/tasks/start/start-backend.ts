@@ -138,10 +138,34 @@ export async function startBackend(
     )
   }
 
-  // TODO: What if user wants to set custom permissions?
-  // Use a hook? A way to disable all open permissions?
-  await setAllPermissionsOpenly(dao, proxy, arapp, bre.web3, bre.artifacts)
-  logBack('All permissions set openly.')
+  // Setup permissions
+  if (hooks && hooks.setupPermissions) {
+    const rootAccount: string = (await bre.web3.eth.getAccounts())[0]
+    const aclAddress = await dao.acl()
+    const ACL = bre.artifacts.require('ACL')
+    const acl = await ACL.at(aclAddress)
+
+    async function createPermission(
+      address: string,
+      permission: string
+    ): Promise<void> {
+      await acl.createPermission(
+        address,
+        proxy.address,
+        permission,
+        rootAccount,
+        { from: rootAccount }
+      )
+    }
+
+    await hooks.setupPermissions(
+      {dao, proxy, createPermission, log: logHook('setupPermissions')},
+      bre
+    )
+  } else {
+    await setAllPermissionsOpenly(dao, proxy, arapp, bre.web3, bre.artifacts)
+    logBack('All permissions set openly.')
+  }
 
   // Watch back-end files.
   const contractsWatcher = chokidar

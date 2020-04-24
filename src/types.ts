@@ -77,6 +77,14 @@ export interface AragonConfigHooks {
     void
   >
   getInitParams?: AragonHook<{}, any[]>
+  setupPermissions?: AragonHook<
+    {
+      dao: KernelInstance
+      proxy: Truffle.ContractInstance
+      createPermission: Function
+    },
+    void
+  >
   postUpdate?: AragonHook<{ proxy: Truffle.ContractInstance }, void>
 }
 
